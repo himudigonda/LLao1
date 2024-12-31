@@ -84,27 +84,23 @@ def main():
                 )
             steps = []
             total_thinking_time = 0
-            accumulated_time = 0
-            step_counter = 1 # initialize step counter
+            step_counter = 1
             try:
               while True:
                     try:
                         new_steps, thinking_time = next(steps_generator)
-                        # First, aggregate the steps
-                        aggregated_steps = []
+                        # Filter out steps with "No Title"
+                        filtered_steps = []
                         for title, content, time, tool, tool_input, tool_result in new_steps:
-                          if title.startswith("Step") and "No Title" in title:
-                            print(f"[DEBUG] llao1.ui.app.main :: Skipping step: {title}, adding time to accumulated: {time}")
-                            accumulated_time += time
-                          else:
-                            if accumulated_time > 0:
-                                print(f"[DEBUG] llao1.ui.app.main :: Adding accumulated time: {accumulated_time} to step: {title}")
-                                time += accumulated_time
-                                accumulated_time = 0 # reset it
-                            aggregated_steps.append((f"Step {step_counter}: {title.split(': ', 1)[1] if ': ' in title else title}", content, time, tool, tool_input, tool_result)) # Add the formatted step
-                            step_counter += 1
+                            if title.startswith("Step") and "No Title" in title:
+                                print(f"[DEBUG] llao1.ui.app.main :: Skipping step: {title}")
+                                continue # Skip this one
+                            else:
+                                filtered_steps.append((f"Step {step_counter}: {title.split(': ', 1)[1] if ': ' in title else title}", content, time, tool, tool_input, tool_result))
+                                step_counter += 1
+                        steps = filtered_steps
 
-                        steps = aggregated_steps
+
                         if thinking_time is not None:
                             total_thinking_time = thinking_time
                         with response_container.container():
