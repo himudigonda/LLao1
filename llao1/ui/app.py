@@ -14,7 +14,7 @@ import traceback
 
 
 def main():
-    st.set_page_config(page_title="LLao1", page_icon="🧠", layout="centered")
+    st.set_page_config(page_title="LLao1", page_icon="🧠", layout="wide")
     st.title("LLao1")
     st.markdown("---")
 
@@ -53,6 +53,8 @@ def main():
         image_file = st.file_uploader(
             "Upload an image (optional)", type=["png", "jpg", "jpeg"]
         )
+        st.markdown("---")
+        time_container = st.empty()
 
     user_query = st.text_area(
         "Enter your query:",
@@ -64,9 +66,9 @@ def main():
     if user_query:
         st.session_state["steps"] = []  # Clear the steps on a new query
         st.session_state["error"] = None
-        with st.spinner("Generating response..."):
+        with st.spinner("Thinking..."):
             response_container = st.empty()
-            time_container = st.empty()
+            # time_container = st.empty()
             image_path = None
 
             if image_file:
@@ -208,15 +210,16 @@ def main():
 
             if total_thinking_time > 0:
                 total_tokens_for_query = (step_counter - 1) * thinking_tokens
-                time_container.markdown(
-                    f"""
-              **Time spent thinking**: {total_thinking_time:.2f} seconds
-
-              **Total token usage for the query**: {total_tokens_for_query} tokens
-              
-              **Tokens spent thinking**: {total_tokens_thinking} tokens
-              """
-                )
+                with st.sidebar:
+                    time_container.markdown(
+                        f"""
+                  **Time spent thinking**: {total_thinking_time:.2f} seconds
+                  
+                  **# Token for the query**: {total_tokens_for_query}
+                  
+                  **# Tokens spent thinking**: {total_tokens_thinking}
+                  """
+                    )
 
         if (
             st.session_state["steps"] and not st.session_state["error"]
