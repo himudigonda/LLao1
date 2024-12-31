@@ -85,6 +85,7 @@ def main():
             steps = []
             total_thinking_time = 0
             accumulated_time = 0
+            step_counter = 1 # initialize step counter
             try:
               while True:
                     try:
@@ -100,8 +101,8 @@ def main():
                                 print(f"[DEBUG] llao1.ui.app.main :: Adding accumulated time: {accumulated_time} to step: {title}")
                                 time += accumulated_time
                                 accumulated_time = 0 # reset it
-                            aggregated_steps.append((title, content, time, tool, tool_input, tool_result))
-
+                            aggregated_steps.append((f"Step {step_counter}: {title.split(': ', 1)[1] if ': ' in title else title}", content, time, tool, tool_input, tool_result)) # Add the formatted step
+                            step_counter += 1
 
                         steps = aggregated_steps
                         if thinking_time is not None:

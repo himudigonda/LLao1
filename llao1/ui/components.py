@@ -18,18 +18,20 @@ def display_steps(steps):
             st.error(f"Unexpected step format: {step}")
             continue
 
-        with st.container():
-          if title.startswith("Final Answer"):
+        if title.startswith("Final Answer"):
+            with st.container():
               print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Final Answer: {title}")
               st.markdown(f"### {title}")
               st.markdown(content)
-          else:
-              print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Step: {title}")
-              st.markdown(f"**{title}**")
-              st.markdown(content)
-              if tool:
-                  st.markdown(f"**Tool Used:** {tool}")
-                  st.markdown(f"**Tool Input:** ```{tool_input}```", unsafe_allow_html=True)
-                  st.markdown(f"**Tool Result:** ```{tool_result}```", unsafe_allow_html=True)
-          st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+              st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+        else:
+            with st.expander(title, expanded=False): # default to closed
+                print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Step: {title}")
+                st.markdown(content)
+                if tool:
+                    st.markdown(f"**Tool Used:** {tool}")
+                    st.markdown(f"**Tool Input:** ```{tool_input}```", unsafe_allow_html=True)
+                    st.markdown(f"**Tool Result:** ```{tool_result}```", unsafe_allow_html=True)
+                st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+
     print(f"[DEBUG] llao1.ui.components.display_steps :: Function finished.")
