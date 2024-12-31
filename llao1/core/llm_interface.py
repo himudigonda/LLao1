@@ -43,7 +43,13 @@ def make_ollama_api_call(
                     format="json",
                     stream=False,
                 )
-                return json.loads(response["message"]["content"])
+                try:
+                    return json.loads(response["message"]["content"])
+                except json.JSONDecodeError:
+                    print(f"[ERROR] llao1.core.llm_interface.make_ollama_api_call :: JSONDecodeError: Could not decode json, returning raw string. Content: {response['message']['content']}")
+                    return {"title": "Error", "content": f"JSONDecodeError: Could not decode JSON, check logs for more info.", "next_action": "final_answer"}
+
+
 
         except Exception as e:
             if attempt == 2:

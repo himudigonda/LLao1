@@ -6,6 +6,7 @@ def display_steps(steps):
     """
     Displays the reasoning steps in a structured manner.
     """
+    print(f"[DEBUG] llao1.ui.components.display_steps :: Function called with steps: {steps}")
     for step in steps:
         # Unpack step information, handling both old and new formats
         if len(step) == 3:
@@ -17,32 +18,19 @@ def display_steps(steps):
             st.error(f"Unexpected step format: {step}")
             continue
 
-        # Ensure content is a string
-        if not isinstance(content, str):
-            content = json.dumps(content)
 
         if title.startswith("Final Answer"):
+            print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Final Answer: {title}")
             st.markdown(f"### {title}")
-            if '```' in content:
-                parts = content.split('```')
-                for index, part in enumerate(parts):
-                    if index % 2 == 0:
-                        st.markdown(part)
-                    else:
-                        if '\n' in part:
-                            lang_line, code = part.split('\n', 1)
-                            lang = lang_line.strip()
-                        else:
-                            lang = ''
-                            code = part
-                        st.code(part, language=lang)
-            else:
-                st.write(content.replace('\n', '<br>'), unsafe_allow_html=True)
+            st.markdown(content)
         else:
             with st.expander(title, expanded=True):
-                st.write(content.replace('\n', '<br>'), unsafe_allow_html=True)
+                print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Step: {title}")
+                st.markdown(content)
                 if tool:
                     st.markdown(f"**Tool Used:** {tool}")
-                    st.markdown(f"**Tool Input:** `{tool_input}`")
-                    st.markdown(f"**Tool Result:** {str(tool_result)[:200] + '...' if len(str(tool_result)) > 200 else tool_result}")
+                    st.markdown(f"**Tool Input:** ```{tool_input}```", unsafe_allow_html=True)
+                    st.markdown(f"**Tool Result:** ```{tool_result}```", unsafe_allow_html=True)
+
         st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+    print(f"[DEBUG] llao1.ui.components.display_steps :: Function finished.")
