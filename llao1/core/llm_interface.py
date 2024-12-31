@@ -28,13 +28,13 @@ def make_ollama_api_call(
     for attempt in range(3):
         try:
             if is_final_answer:
-              response = ollama.chat(
+                response = ollama.chat(
                     model=model,
                     messages=messages,
                     options={"temperature": temperature, "num_predict": max_tokens},
                     stream=False,
                 )
-              return response['message']['content']
+                return response["message"]["content"]
             else:
                 response = ollama.chat(
                     model=model,
@@ -46,10 +46,14 @@ def make_ollama_api_call(
                 try:
                     return json.loads(response["message"]["content"])
                 except json.JSONDecodeError:
-                    print(f"[ERROR] llao1.core.llm_interface.make_ollama_api_call :: JSONDecodeError: Could not decode json, returning raw string. Content: {response['message']['content']}")
-                    return {"title": "Error", "content": f"JSONDecodeError: Could not decode JSON, check logs for more info.", "next_action": "final_answer"}
-
-
+                    print(
+                        f"[ERROR] llao1.core.llm_interface.make_ollama_api_call :: JSONDecodeError: Could not decode json, returning raw string. Content: {response['message']['content']}"
+                    )
+                    return {
+                        "title": "Error",
+                        "content": f"JSONDecodeError: Could not decode JSON, check logs for more info.",
+                        "next_action": "final_answer",
+                    }
 
         except Exception as e:
             if attempt == 2:

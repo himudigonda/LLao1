@@ -14,6 +14,8 @@ def generate_reasoning_steps(
     thinking_tokens: int = DEFAULT_THINKING_TOKENS,
     model: str = DEFAULT_MODEL,
     image_path: str = None,
+    previous_messages: List[Dict[str,str]] = None,
+    temperature: float = 0.2
 ) -> Generator[Tuple[List[Tuple[str, str, float, str, str, Any]], float, int], None, None]:
     """
     Generates reasoning steps using the LLM, with tool usage.
@@ -23,6 +25,8 @@ def generate_reasoning_steps(
         thinking_tokens: The token limit for each reasoning step.
         model: The ollama model.
         image_path: path to the image for multimodal calls.
+        previous_messages: List of previous messages to maintain context
+        temperature: temperature for the LLM.
 
     Returns:
         A generator yielding tuples of step details, total thinking time, and tokens used.
@@ -37,6 +41,10 @@ def generate_reasoning_steps(
             "content": "Thank you! I will now think step by step following my instructions, starting at the beginning after decomposing the problem.",
         },
     ]
+    if previous_messages:
+        print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Adding previous messages to context")
+        messages.extend(previous_messages)
+
     print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Initial messages: {messages}")
 
     if image_path:
@@ -62,10 +70,17 @@ def generate_reasoning_steps(
         print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Starting step {step_count}")
         start_time = time.time()
         print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Calling make_ollama_api_call with messages: {messages}, tokens: {thinking_tokens}, model: {model}")
+
+        current_thinking_tokens = thinking_tokens
+
+        if any(tool in messages[-1]['content'] for tool in ['code_executor','web_search', 'fetch_page_content']):
+             current_thinking_tokens += 100 # Increase tokens if tool is used
+             print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Increasing tokens by 100 since tool is used. Tokens: {current_thinking_tokens}")
         step_data = make_ollama_api_call(
             messages,
-            thinking_tokens,
+            current_thinking_tokens,
             model=model,
+            temperature=temperature
         )
         end_time = time.time()
         thinking_time = end_time - start_time
@@ -115,7 +130,7 @@ def generate_reasoning_steps(
                 {"role": "system", "content": f"Tool result: {step_data['tool_result']}"}
             )
             print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Tool result added to messages: {step_data['tool_result']}")
-        tokens_used += thinking_tokens
+        tokens_used += current_thinking_tokens
 
 
         if step_data.get('next_action') == 'final_answer' or step_count > 15:
@@ -137,7 +152,7 @@ def generate_reasoning_steps(
 
     start_time = time.time()
     print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Calling make_ollama_api_call for final answer. Model: {model}")
-    final_data = make_ollama_api_call(messages, 1200, is_final_answer=True, model=model)
+    final_data = make_ollama_api_call(messages, 1200, is_final_answer=True, model=model, temperature=temperature)
     end_time = time.time()
     thinking_time = end_time - start_time
     total_thinking_time += thinking_time
