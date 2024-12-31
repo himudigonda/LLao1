@@ -13,14 +13,8 @@ from io import BytesIO
 import traceback
 
 def main():
-    st.set_page_config(page_title="LLao1", page_icon="🧠", layout="wide")
-    st.title("LLao1: Local Reasoning with Ollama")
-    st.markdown("""
-    LLao1 is an experimental application that enhances reasoning capabilities through multi-step thought processing, using a local Ollama model.
-    It includes tool calling capabilities for basic code execution and web search.
-
-    Open source [repository here](https://github.com/bklieger-groq)
-    """)
+    st.set_page_config(page_title="LLao1", page_icon="🧠", layout="centered")
+    st.title("LLao1")
     st.markdown("---")
 
     # Initialize session state for steps and errors
@@ -85,10 +79,11 @@ def main():
             steps = []
             total_thinking_time = 0
             step_counter = 1
+            total_tokens_thinking = 0
             try:
               while True:
                     try:
-                        new_steps, thinking_time = next(steps_generator)
+                        new_steps, thinking_time, step_tokens = next(steps_generator) # get step tokens
                         # Filter out steps with "No Title"
                         filtered_steps = []
                         for title, content, time, tool, tool_input, tool_result in new_steps:
@@ -96,17 +91,20 @@ def main():
                                 print(f"[DEBUG] llao1.ui.app.main :: Skipping step: {title}")
                                 continue # Skip this one
                             else:
-                                filtered_steps.append((f"Step {step_counter}: {title.split(': ', 1)[1] if ': ' in title else title}", content, time, tool, tool_input, tool_result))
+                                filtered_steps.append((f"{title.split(': ', 1)[1] if ': ' in title else title}", content, time, tool, tool_input, tool_result))
                                 step_counter += 1
                         steps = filtered_steps
-
-
                         if thinking_time is not None:
                             total_thinking_time = thinking_time
+                        if step_tokens:
+                            total_tokens_thinking += step_tokens
                         with response_container.container():
                             display_steps(steps)
-                        time_container.markdown(f"**Total thinking time: {total_thinking_time:.2f} seconds**")
+                        # time_container.markdown(f"**Total thinking time: {total_thinking_time:.2f} seconds**")
+
                         st.session_state['steps'] = steps
+
+
                     except StopIteration:
                         print("[DEBUG] llao1.ui.app.main :: Reasoning generator finished.")
                         break
@@ -131,7 +129,13 @@ def main():
                     except Exception as e:
                         print(f"[ERROR] llao1.ui.app.main :: Error removing temporal image: {image_path} error: {e}")
 
-
+            if total_thinking_time > 0:
+              total_tokens_for_query =  (step_counter-1) * thinking_tokens
+              time_container.markdown(f"""
+              **Time spent thinking**: {total_thinking_time:.2f} seconds
+              
+              **Tokens spent thinking**: {total_tokens_thinking} tokens
+              """)
 
         if st.session_state['steps'] and not st.session_state['error']: # only display export button if there is data and no error.
             if st.download_button(

@@ -14,7 +14,7 @@ def generate_reasoning_steps(
     thinking_tokens: int = DEFAULT_THINKING_TOKENS,
     model: str = DEFAULT_MODEL,
     image_path: str = None,
-) -> Generator[Tuple[List[Tuple[str, str, float, str, str, Any]], float], None, None]:
+) -> Generator[Tuple[List[Tuple[str, str, float, str, str, Any]], float, int], None, None]:
     """
     Generates reasoning steps using the LLM, with tool usage.
 
@@ -25,7 +25,7 @@ def generate_reasoning_steps(
         image_path: path to the image for multimodal calls.
 
     Returns:
-        A generator yielding tuples of step details and total thinking time.
+        A generator yielding tuples of step details, total thinking time, and tokens used.
     """
     print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Function called with prompt: {prompt}, thinking_tokens: {thinking_tokens}, model: {model}, image_path: {image_path}")
 
@@ -56,6 +56,7 @@ def generate_reasoning_steps(
     step_count = 1
     total_thinking_time = 0
     print(f"[INFO] llao1.core.reasoning.generate_reasoning_steps :: Starting reasoning loop")
+    tokens_used = 0
 
     while True:
         print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Starting step {step_count}")
@@ -114,6 +115,7 @@ def generate_reasoning_steps(
                 {"role": "system", "content": f"Tool result: {step_data['tool_result']}"}
             )
             print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Tool result added to messages: {step_data['tool_result']}")
+        tokens_used += thinking_tokens
 
 
         if step_data.get('next_action') == 'final_answer' or step_count > 15:
@@ -121,7 +123,7 @@ def generate_reasoning_steps(
             break
         step_count += 1
         print(f"[INFO] llao1.core.reasoning.generate_reasoning_steps :: Yielding steps and continuing to next step. Current steps: {steps}")
-        yield steps, None  # Yield steps for streaming before continuing, to avoid long waits.
+        yield steps, None, tokens_used # Yield steps for streaming before continuing, to avoid long waits.
 
     # Generate final answer
     print(f"[INFO] llao1.core.reasoning.generate_reasoning_steps :: Generating final answer")
@@ -147,5 +149,5 @@ def generate_reasoning_steps(
 
 
     print(f"[INFO] llao1.core.reasoning.generate_reasoning_steps :: Yielding final steps and total_thinking_time: {total_thinking_time}")
-    yield steps, total_thinking_time
+    yield steps, total_thinking_time, tokens_used # return total tokens
     print(f"[DEBUG] llao1.core.reasoning.generate_reasoning_steps :: Function finished")
