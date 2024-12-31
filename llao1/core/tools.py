@@ -7,6 +7,7 @@ from exa_py import Exa
 EXA_API_KEY = os.environ.get("EXA_API_KEY")
 exa = Exa(api_key=EXA_API_KEY) if EXA_API_KEY else None
 
+
 def execute_code(code: str) -> str:
     """
     Executes Python code in a sandboxed subprocess environment.
@@ -17,6 +18,7 @@ def execute_code(code: str) -> str:
     Returns:
         The output of the code execution or an error message.
     """
+    print(f"[DEBUG] llao1.core.tools.execute_code :: Function called with code: {code}")
     try:
         result = subprocess.run(
             ["python3", "-c", code],
@@ -25,10 +27,17 @@ def execute_code(code: str) -> str:
             timeout=5,
             env={"PYTHONPATH": os.getcwd()},
         )
-        return result.stdout if result.returncode == 0 else f"Error: {result.stderr}"
+        if result.returncode == 0:
+            print(f"[DEBUG] llao1.core.tools.execute_code :: Code executed successfully. Output: {result.stdout}")
+            return result.stdout
+        else:
+            print(f"[ERROR] llao1.core.tools.execute_code :: Code execution failed. Error: {result.stderr}")
+            return f"Error: {result.stderr}"
     except subprocess.TimeoutExpired:
+        print(f"[ERROR] llao1.core.tools.execute_code :: Code execution timed out")
         return "Error: Code execution timed out"
     except Exception as e:
+        print(f"[ERROR] llao1.core.tools.execute_code :: An error occurred during code execution: {e}")
         return f"Error: {str(e)}"
 
 
@@ -43,7 +52,9 @@ def web_search(query: str, num_results: int = 5) -> str:
     Returns:
         Formatted search results.
     """
+    print(f"[DEBUG] llao1.core.tools.web_search :: Function called with query: {query}, num_results: {num_results}")
     if not exa:
+      print(f"[ERROR] llao1.core.tools.web_search :: Exa API Key is not set.")
       return "Error: Exa API Key is not set."
     try:
         search_results = exa.search_and_contents(
@@ -54,6 +65,7 @@ def web_search(query: str, num_results: int = 5) -> str:
             highlights=True,
             text=True
         )
+        print(f"[DEBUG] llao1.core.tools.web_search :: Exa API search results: {search_results}")
 
         formatted_results = []
         for idx, result in enumerate(search_results.results):
@@ -64,8 +76,11 @@ def web_search(query: str, num_results: int = 5) -> str:
             formatted_results.append(
                 f"Result {idx + 1}:\nID: {id}\nTitle: {title}\nSnippet: {snippet}\nURL: {url}\n"
             )
-        return "\n".join(formatted_results)
+        formatted_results_str = "\n".join(formatted_results)
+        print(f"[DEBUG] llao1.core.tools.web_search :: Formatted search results: {formatted_results_str}")
+        return formatted_results_str
     except Exception as e:
+        print(f"[ERROR] llao1.core.tools.web_search :: An error occurred while using Exa API: {e}")
         return f"An error occurred while using Exa API: {str(e)}"
 
 
@@ -79,10 +94,13 @@ def fetch_page_content(ids: list) -> str:
     Returns:
         Formatted content of the specified web pages or an error message.
     """
+    print(f"[DEBUG] llao1.core.tools.fetch_page_content :: Function called with ids: {ids}")
     if not exa:
-        return "Error: Exa API Key is not set."
+      print(f"[ERROR] llao1.core.tools.fetch_page_content :: Exa API Key is not set.")
+      return "Error: Exa API Key is not set."
     try:
         page_contents = exa.get_contents(ids, text=True)
+        print(f"[DEBUG] llao1.core.tools.fetch_page_content :: Exa API page contents: {page_contents}")
 
         formatted_contents = []
         for page in page_contents.results:
@@ -90,6 +108,9 @@ def fetch_page_content(ids: list) -> str:
             text = page.text or "No text found"
             formatted_contents.append(f"Title: {title}\nContent: {text}\n")
 
-        return "\n".join(formatted_contents)
+        formatted_contents_str = "\n".join(formatted_contents)
+        print(f"[DEBUG] llao1.core.tools.fetch_page_content :: Formatted page contents: {formatted_contents_str}")
+        return formatted_contents_str
     except Exception as e:
+        print(f"[ERROR] llao1.core.tools.fetch_page_content :: An error occurred while retrieving page content: {e}")
         return f"An error occurred while retrieving page content: {str(e)}"
