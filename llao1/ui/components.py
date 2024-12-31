@@ -23,7 +23,7 @@ def display_steps(steps):
               print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Final Answer: {title}")
               st.markdown(f"### {title}")
               st.markdown(content)
-              st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+              st.markdown(f"*Thinking effort: {thinking_time:.2f} units*")
         else:
             with st.expander(title, expanded=False): # default to closed
                 print(f"[DEBUG] llao1.ui.components.display_steps :: Displaying Step: {title}")
@@ -32,6 +32,6 @@ def display_steps(steps):
                     st.markdown(f"**Tool Used:** {tool}")
                     st.markdown(f"**Tool Input:** ```{tool_input}```", unsafe_allow_html=True)
                     st.markdown(f"**Tool Result:** ```{tool_result}```", unsafe_allow_html=True)
-                st.markdown(f"*Thinking time: {thinking_time:.2f} seconds*")
+                st.markdown(f"*Thinking effort: {thinking_time:.2f} units*")
 
     print(f"[DEBUG] llao1.ui.components.display_steps :: Function finished.")
