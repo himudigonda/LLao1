@@ -2,6 +2,7 @@
 
 ## Overview
 
+[![LLao1](https://github.com/himudigonda/LLao1/blob/main/assets/Thumbnail.jpeg)](https://youtu.be/cw4-_47YymU)
 [Watch Demo on YouTube](https://youtu.be/cw4-_47YymU)
 
 
